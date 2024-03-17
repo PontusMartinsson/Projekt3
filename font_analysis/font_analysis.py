@@ -3,12 +3,12 @@ import numpy as np
 import cv2
 from PIL import Image, ImageDraw, ImageFont
 
-def test():
-    font_size = 1000
-    font = ImageFont.truetype('CourierPrime-Regular.ttf', font_size)
+def analyze(ttf_path: str, resolution: int):
+    pixels = []
+    font = ImageFont.truetype(ttf_path, resolution)
 
     # create a blank canvas to render the symbols
-    canvas_size = (font_size, font_size)
+    canvas_size = (resolution, resolution)
     canvas = Image.new('L', canvas_size, color=255)
     draw = ImageDraw.Draw(canvas)
 
@@ -26,14 +26,15 @@ def test():
         img.save('letter.png')
 
         img_analysis = cv2.imread('letter.png', cv2.IMREAD_GRAYSCALE)
-        n_black = np.sum(img_analysis == 0)
+        
+        pixels.append(np.sum(img_analysis == 0))
 
-        print(characters[i])
-        print('Number of black pixels:', n_black)
-        print("-------------------------------------")
+        
 
-        draw.rectangle([0, 0, font_size, font_size], fill=255) #clear canvas
+        draw.rectangle([0, 0, resolution, resolution], fill=255) #clear canvas
 
         i += 1
 
     os.remove('letter.png')
+
+    return(pixels)

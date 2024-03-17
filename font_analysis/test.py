@@ -1,3 +1,4 @@
-from font_analysis import test
+from font_analysis import analyze
+sus = "grer"
 
-test()
+print(analyze("CourierPrime-Regular.ttf", 1000))
