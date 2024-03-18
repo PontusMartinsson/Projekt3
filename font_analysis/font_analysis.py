@@ -7,17 +7,18 @@ def analyze(ttf_path: str, resolution: int):
     pixels = []
     font = ImageFont.truetype(ttf_path, resolution)
 
+    characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#*+-=.,!?%&~/$@'
+    char_list = list(characters)
+
     # create a blank canvas to render the symbols
     canvas_size = (resolution, resolution)
     canvas = Image.new('L', canvas_size, color=255)
     draw = ImageDraw.Draw(canvas)
 
-    characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-
     i = 0
 
-    while i < len(characters):
-        draw.text((0, 0), characters[i], font=font, fill=0) # draw the symbol onto the canvas
+    while i < len(char_list):
+        draw.text((0, 0), char_list[i], font=font, fill=0) # draw the symbol onto the canvas
 
         glyph_array = np.array(canvas)
         binary_glyph_array = (glyph_array > 128).astype(np.uint8) * 255
@@ -35,6 +36,20 @@ def analyze(ttf_path: str, resolution: int):
 
         i += 1
 
+    i = 0
+
+    while i < len(pixels):
+        j = 1
+
+        while j < len(pixels) - i:
+            if pixels[j] < pixels[j-1]:
+                pixels[j], pixels[j-1] = pixels[j-1], pixels[j]
+                char_list[j], char_list[j-1] = char_list[j-1], char_list[j]
+
+            j += 1
+        
+        i += 1
+
     os.remove('letter.png')
 
-    return(pixels)
+    return(char_list)
