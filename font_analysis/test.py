@@ -1,4 +1,9 @@
 from font_analysis import analyze
-sus = "grer"
 
-print(analyze("CourierPrime-Regular.ttf", 1000))
+analyze("CourierPrime-Regular.ttf", 1000)
+
+file = open('save.txt', 'r')
+characters = file.read()
+file.close()
+
+print(characters)

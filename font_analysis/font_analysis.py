@@ -52,4 +52,7 @@ def analyze(ttf_path: str, resolution: int):
 
     os.remove('letter.png')
 
-    return(char_list)
+    characters = "".join(char_list)
+    file = open('save.txt', 'w')
+    file.write(characters)
+    file.close()
