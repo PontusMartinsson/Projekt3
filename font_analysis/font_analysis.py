@@ -7,7 +7,7 @@ def analyze(ttf_path: str, resolution: int):
     pixels = []
     font = ImageFont.truetype(ttf_path, resolution)
 
-    characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#*+-=.,!?%&~/$@'
+    characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#*+-=.,!?%&~/$@' #default characters
     char_list = list(characters)
 
     # create a blank canvas to render the symbols
