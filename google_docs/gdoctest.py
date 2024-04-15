@@ -41,7 +41,8 @@ def main():
 
     _id = document.get("documentId") #get id
   
-    xRes = 7
+    text = "placeholder\n"
+    xRes = len(text)
     yRes = 5
     red = 0.0
     green = 0.0
@@ -58,7 +59,7 @@ def main():
       requests = [
         {
           "insertText": {
-            "text": "Sample\n",
+            "text": text,
             "location": {
               "index": startIndex
             }
