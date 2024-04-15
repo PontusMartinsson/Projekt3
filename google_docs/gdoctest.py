@@ -45,14 +45,15 @@ def main():
     write = service.documents().batchUpdate(documentId=_id, body={'requests':[{'insertText':{'location':{'index':2}, 'text':"shrek"}}]}).execute() #insert text
     write = service.documents().batchUpdate(documentId=_id, body={'requests':[{'insertText':{'location':{'index':1}, 'text':"hanoos"}}]}).execute() #insert text
 
-    # paragraph = {
-    #   'elements':[
-    #     {
-    #       'startIndex':
-    #     }
+    paragraph = {
+      'elements':[
+        {
+          'startIndex':1  
+        }
 
-    #   ]
-    # }
+      ]
+    }
+
     write = service.documents().batchUpdate(documentId=_id, body={'paragraph':paragraph}).execute() #insert text
 
   except HttpError as err:
