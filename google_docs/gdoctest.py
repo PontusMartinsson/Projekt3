@@ -15,7 +15,7 @@ def main():
   Prints the title of a sample document.
   """
   creds = None
-  # The file token.json stores the user's access and refresh tokens, and is
+  # The file token.json stores the user"s access and refresh tokens, and is
   # created automatically when the authorization flow completes for the first
   # time.
   if os.path.exists("token.json"):
@@ -37,24 +37,76 @@ def main():
     service = build("docs", "v1", credentials=creds)
 
     # Retrieve the documents contents from the Docs service.
-    document = service.documents().create(body={'title':'textTest'}).execute() #create document
+    document = service.documents().create(body={"title":"textTest"}).execute() #create document
 
-    _id = document.get('documentId') #get id
+    _id = document.get("documentId") #get id
+  
+    xRes = 7
+    yRes = 5
+    red = 0.0
+    green = 0.0
+    blue = 0.0
+    fontFamily = "Courier Prime"
+    fontSize = 5
+    lineSpacing = 60 # target times 100
+    i = 0
 
-    write = service.documents().batchUpdate(documentId=_id, body={'requests':[{'insertText':{'location':{'index':1}, 'text':"grer"}}]}).execute() #insert text
-    write = service.documents().batchUpdate(documentId=_id, body={'requests':[{'insertText':{'location':{'index':2}, 'text':"shrek"}}]}).execute() #insert text
-    write = service.documents().batchUpdate(documentId=_id, body={'requests':[{'insertText':{'location':{'index':1}, 'text':"hanoos"}}]}).execute() #insert text
+    while(i < yRes):
+      startIndex = xRes * i + 1
+      endIndex = startIndex + xRes
 
-    paragraph = {
-      'elements':[
+      requests = [
         {
-          'startIndex':1  
+          "insertText": {
+            "text": "Sample\n",
+            "location": {
+              "index": startIndex
+            }
+          }
+        },
+        {
+          "updateParagraphStyle": {
+            "range": {
+              "startIndex": startIndex,
+              "endIndex": endIndex
+            },
+            "paragraphStyle": {
+              "lineSpacing":lineSpacing
+            },
+            "fields": "lineSpacing"
+          }
+        },
+        {
+          "updateTextStyle": {
+            "range": {
+              "startIndex": startIndex,
+              "endIndex": endIndex
+            },
+            "textStyle": {
+              "weightedFontFamily": {
+                "fontFamily": fontFamily
+              },
+              "fontSize": {
+                "magnitude": fontSize,
+                "unit": "PT"
+              },
+              "foregroundColor": {
+                "color": {
+                  "rgbColor": {
+                    "red": red,
+                    "green": green,
+                    "blue": blue
+                  }
+                }
+              }
+            },
+            "fields": "weightedFontFamily, fontSize, foregroundColor"
+          }
         }
-
       ]
-    }
 
-    write = service.documents().batchUpdate(documentId=_id, body={'paragraph':paragraph}).execute() #insert text
+      write = service.documents().batchUpdate(documentId=_id, body={"requests": requests}).execute()
+      i += 1
 
   except HttpError as err:
     print(err)
