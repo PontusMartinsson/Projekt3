@@ -42,7 +42,7 @@ def analyze(ttf_path: str, resolution: int):
         j = 1
 
         while j < len(pixels) - i:
-            if pixels[j] < pixels[j-1]:
+            if pixels[j] > pixels[j-1]:
                 pixels[j], pixels[j-1] = pixels[j-1], pixels[j]
                 char_list[j], char_list[j-1] = char_list[j-1], char_list[j]
 
