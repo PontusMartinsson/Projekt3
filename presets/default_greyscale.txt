@@ -1,0 +1,5 @@
+characters=MQW@N$gEBHmKqpRX#kdA&b%GSDwhPF8ZOUTxa69se0yVYnf4z2CL5u3JojcvItrli17/?*=+!~,-. 
+greyscale=True
+width=130
+fontsize=5
+rowspacing=60
