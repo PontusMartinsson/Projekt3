@@ -6,7 +6,7 @@ from alive_progress import alive_bar
 
 def analyze(characters, resolution):
     pixels = []
-    font = ImageFont.truetype("CourierPrime-Regular.ttf", resolution)
+    font = ImageFont.truetype("font.ttf", resolution)
 
     # characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#*+-=.,!?%&~/$@ " #default characters
     char_list = list(characters)

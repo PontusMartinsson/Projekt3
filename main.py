@@ -7,6 +7,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+from PIL import Image
+
 from font_analysis import analyze
 
 # help functions --------------------------------------------------
@@ -27,9 +29,11 @@ def multipleChoice(question, options):
     while True:
         userInput = input(question)
         if (userInput in valid) and (len(userInput) == 1):
+            print()
             return options[ord(userInput) - 97]
         else:
             print("Invalid input")
+            print()
 
 # display and validate a question that expects an int
 # returns an int depending on the value inputted
@@ -39,9 +43,11 @@ def intQuestion(question):
     while True:
         userInput = input(question)
         if userInput.isnumeric():
+            print()
             return int(userInput)
         else:
             print("Invalid input")
+            print()
 
 # display and validate a yes or no question
 # returns a string containing eiter "y" or "n"
@@ -51,11 +57,14 @@ def yesNo(question):
     while True:
         userInput = input(question)
         if (userInput == "y"):
+            print()
             return "y"
         elif (userInput == "n"):
+            print()
             return "n"
         else:
             print("Invalid input")
+            print()
 
 # prompt the user to select a file of one or more selected file types in a specified folder
 # returns the relative path of the selected file
@@ -103,7 +112,7 @@ def preset():
     with open(path, "r") as file:
         preset = file.readlines()
 
-    options = []
+    options = [None] * 5
 
     for value in preset:
         if "characters=" in value:
@@ -159,6 +168,7 @@ def manual():
 
     # characters
     options.append(input("Please enter all of the characters you would like to use\nDefault is (ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#*+-=.,!?%&~/$@ ) including space\nThe same character is allowed more than once\n"))
+    print()
 
     # greyscale
     match yesNo("Would you like the image to be greyscale?"):
@@ -180,8 +190,9 @@ def manual():
     print("A font analysis has to be performed")
     print("Depending on how many characters you have chosen, the time this takes might vary")
     options[0] = analyze(options[0], 1000)
+    print()
 
-    return(options)
+    return(options)  
 
 # main
 def main():
@@ -195,9 +206,17 @@ def main():
             options = manual()
             if yesNo("Would you like to save this as a new preset?") == "y":
                 savePreset(options)
-    
-    #contnuie
-    imagePath = pickFile("Which image would you like to use?", "img", [".png", ".jpg", ".jpeg"])
+
+    image = Image.open(pickFile("Which image would you like to use?", "img", [".png", ".jpg", ".jpeg"]))
+
+    docName = input("What would you like to name the output document?\n")
+
+    xRes = options[2]
+    yRes = int(float(xRes / image.width) * image.height)
+
+    image.resize((xRes, yRes)).save("temp.png")
+
+    # convert = int((float(val) / 255) * len(options[0]))
 
 main()
 
