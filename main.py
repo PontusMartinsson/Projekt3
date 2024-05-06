@@ -1,15 +1,15 @@
 import os
 import re
+import cv2
+import numpy as np
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-
-from PIL import Image
-
-from font_analysis import analyze
+from PIL import Image, ImageDraw, ImageFont
+from alive_progress import alive_bar
 
 # help functions --------------------------------------------------
 
@@ -103,6 +103,8 @@ def login():
         with open("token.json", "w") as token:
             token.write(creds.to_json())
 
+    return creds
+
 # select a custom preset
 # returns an array containing the various option values
 def preset():
@@ -116,27 +118,28 @@ def preset():
 
     for value in preset:
         if "characters=" in value:
-            options[0] = str(re.sub(r'^.*?=', '', value).strip())
-        elif "greyscale=" in value:
-            options[1] = bool(re.sub(r'^.*?=', '', value).strip())
+            options[0] = str(re.sub(r'^.*?=', "", value).replace("\n", "").replace(" ", ""))
+        elif "grayscale=" in value:
+            options[1] = bool(re.sub(r'^.*?=', "", value).replace("\n", ""))
         elif "width=" in value:
-            options[2] = int(re.sub(r'^.*?=', '', value).strip())
+            options[2] = int(re.sub(r'^.*?=', "", value).replace("\n", ""))
         elif "fontsize=" in value:
-            options[2] = int(re.sub(r'^.*?=', '', value).strip())
+            options[3] = int(re.sub(r'^.*?=', "", value).replace("\n", ""))
         elif "rowspacing=" in value:
-            options[2] = int(re.sub(r'^.*?=', '', value).strip())
+            options[4] = int(re.sub(r'^.*?=', "", value).replace("\n", ""))
 
     return options
 
 # saves options to a new text document
 # returns an array containing the various option values
 def savePreset(options):
+    optionsText = options.copy()
     # reformat the options array
-    order = ["characters", "greyscale", "width", "fontsize", "rowspacing"]
+    order = ["characters", "grayscale", "width", "fontsize", "rowspacing"]
     i = 0
 
-    while i < len(options):
-        options[i] = order[i] + "=" + str(options[i]) + "\n"
+    while i < len(optionsText):
+        optionsText[i] = order[i] + "=" + str(optionsText[i]) + "\n"
         i += 1
 
     # get desired filename from user
@@ -157,7 +160,7 @@ def savePreset(options):
 
     # create a new .txt file and write to it
     with open(path, "w") as file:
-        file.writelines(options)
+        file.writelines(optionsText)
 
     print("Preset successfully saved in:", path)
 
@@ -167,11 +170,11 @@ def manual():
     options = []
 
     # characters
-    options.append(input("Please enter all of the characters you would like to use\nDefault is (ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#*+-=.,!?%&~/$@ ) including space\nThe same character is allowed more than once\n"))
+    options.append(input("Please enter all of the characters you would like to use\nDefault is (ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#*+-=.,!?%&~/$@)\nThe same character is allowed more than once\nAny spaces will be ignored\n").replace(" ", ""))
     print()
 
-    # greyscale
-    match yesNo("Would you like the image to be greyscale?"):
+    # grayscale
+    match yesNo("Would you like the image to be grayscale?"):
         case "y":
             options.append(True)
         case "n":
@@ -184,7 +187,7 @@ def manual():
     options.append(intQuestion("What font size would you like?\nDefault is §"))
 
     # row spacing
-    options.append(intQuestion("What row spacing would you like?\nDefault is §\nGoogle Docs will divide this value by 100, so 50 --> 0.5"))
+    options.append(intQuestion("What row spacing would you like?\nDefault is §\nGoogle Docs will divide this value by 100, so 60 --> 0.6"))
 
     # perform font analysis
     print("A font analysis has to be performed")
@@ -192,11 +195,158 @@ def manual():
     options[0] = analyze(options[0], 1000)
     print()
 
-    return(options)  
+    return(options) 
+
+# draw, analyze and sort selected characters based on the amount of black pixels
+# returns a string containing the selected characters in order from most to least amount of pixels
+def analyze(characters, resolution):
+    pixels = []
+    font = ImageFont.truetype("font.ttf", resolution)
+
+    # characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#*+-=.,!?%&~/$@ " #default characters
+    char_list = list(characters)
+
+    # create a blank canvas to render the symbols
+    canvas_size = (resolution, resolution)
+    canvas = Image.new("L", canvas_size, color=255)
+    draw = ImageDraw.Draw(canvas)
+
+    with alive_bar(len(characters)) as bar:
+        for char in char_list:
+            draw.text((0, 0), char, font=font, fill=0) # draw the symbol onto the canvas
+
+            glyph_array = np.array(canvas)
+            binary_glyph_array = (glyph_array > 128).astype(np.uint8) * 255
+            
+            img = Image.fromarray(binary_glyph_array)
+            img.save("letter.png")
+
+            img_analysis = cv2.imread("letter.png", cv2.IMREAD_GRAYSCALE)
+            
+            pixels.append(np.sum(img_analysis == 0))
+
+            draw.rectangle([0, 0, resolution, resolution], fill=255) #clear canvas
+
+            bar()
+
+    i = 0
+
+    while i < len(pixels):
+        j = 1
+
+        while j < len(pixels) - i:
+            if pixels[j] > pixels[j-1]:
+                pixels[j], pixels[j-1] = pixels[j-1], pixels[j]
+                char_list[j], char_list[j-1] = char_list[j-1], char_list[j]
+
+            j += 1
+        
+        i += 1
+
+    os.remove("letter.png")
+
+    characters = "".join(char_list)
+
+    return characters
+
+# convert the image to grayscale and translate each pixel to a character
+# returns an array of strings where each character represents a pixel 
+def grayscale(characters, yRes):
+    image = cv2.imread('temp.png', cv2.IMREAD_GRAYSCALE)
+    output = [""] * yRes
+    i = 0
+
+    while i < yRes:
+        for pixel in image[i]:
+            output[i] += characters[int(float(pixel / 255) * (len(characters) - 1))]
+        i += 1
+
+    return output
+
+def writeDoc(creds, grayscale, docName, content, xRes, yRes, fontSize, lineSpacing):
+    try:
+        service = build("docs", "v1", credentials=creds)
+        document = service.documents().create(body={"title":docName}).execute() # create document
+
+        _id = document.get("documentId") # get id
+    
+        # text = "placeholder\n"
+        # xRes = len(text)
+        # yRes = 5
+        red = 0.0
+        green = 0.0
+        blue = 0.0
+        fontFamily = "Courier Prime"
+        # fontSize = 5
+        # lineSpacing = 60 # target times 100
+        i = 0
+
+        requests = []
+
+        while(i < yRes):
+            startIndex = xRes * i + 1
+            endIndex = startIndex + xRes
+
+            requests.append({
+                "insertText": {
+                    "text": content[i],
+                    "location": {
+                        "index": startIndex
+                    }
+                }
+            })
+
+            requests.append({
+                "updateParagraphStyle": {
+                    "range": {
+                        "startIndex": startIndex,
+                        "endIndex": endIndex
+                    },
+                    "paragraphStyle": {
+                        "lineSpacing":lineSpacing
+                    },
+                    "fields": "lineSpacing"
+                }
+            })
+
+            requests.append({
+                "updateTextStyle": {
+                    "range": {
+                        "startIndex": startIndex,
+                        "endIndex": endIndex
+                    },
+                    "textStyle": {
+                        "weightedFontFamily": {
+                            "fontFamily": fontFamily
+                        },
+                        "fontSize": {
+                            "magnitude": fontSize,
+                            "unit": "PT"
+                        },
+                        "foregroundColor": {
+                            "color": {
+                                "rgbColor": {
+                                    "red": red,
+                                    "green": green,
+                                    "blue": blue
+                                }
+                            }
+                        }
+                    },
+                    "fields": "weightedFontFamily, fontSize, foregroundColor"
+                }
+            })
+
+            i += 1
+
+        write = service.documents().batchUpdate(documentId=_id, body={"requests": requests}).execute()
+
+    except HttpError as err:
+        print(err)
 
 # main
 def main():
-    login()
+    creds = login()
 
     options = []
     match yesNo("Would you like to use a preset?\nTo create a new preset, choose n"):
@@ -209,26 +359,19 @@ def main():
 
     image = Image.open(pickFile("Which image would you like to use?", "img", [".png", ".jpg", ".jpeg"]))
 
-    docName = input("What would you like to name the output document?\n")
-
+    print(options)
     xRes = options[2]
     yRes = int(float(xRes / image.width) * image.height)
-
     image.resize((xRes, yRes)).save("temp.png")
 
-    # convert = int((float(val) / 255) * len(options[0]))
+    docName = input("What would you like to name the output document?\n")
+
+    match options[1]:
+        case True:
+            writeDoc(creds, True, docName, grayscale(options[0], yRes), xRes, yRes, options[3], options[4])
+        case False:
+            writeDoc(creds, False, docName, color(options[0], yRes), xRes, yRes, options[3], options[4])
+    
+    os.remove("temp.png")
 
 main()
-
-# login
-
-# preset?
-# custom symbols?
-# color
-# width (height is automatic)
-# save preset?
-# name preset
-
-# image
-# rescale (if applicable)
-# document name
