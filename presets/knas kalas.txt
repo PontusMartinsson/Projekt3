@@ -1,0 +1,5 @@
+characters=MdAevrrlli 
+grayscale=True
+width=250
+fontsize=3
+rowspacing=60

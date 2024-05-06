@@ -118,7 +118,7 @@ def preset():
 
     for value in preset:
         if "characters=" in value:
-            options[0] = str(re.sub(r'^.*?=', "", value).replace("\n", "").replace(" ", ""))
+            options[0] = str(re.sub(r'^.*?=', "", value).replace("\n", ""))
         elif "grayscale=" in value:
             options[1] = bool(re.sub(r'^.*?=', "", value).replace("\n", ""))
         elif "width=" in value:
@@ -170,7 +170,7 @@ def manual():
     options = []
 
     # characters
-    options.append(input("Please enter all of the characters you would like to use\nDefault is (ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#*+-=.,!?%&~/$@)\nThe same character is allowed more than once\nAny spaces will be ignored\n").replace(" ", ""))
+    options.append(input("Please enter all of the characters you would like to use\nDefault is (ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#*+-=.,!?%&~/$@)\nThe same character is allowed more than once\nAny spaces will be ignored\n"))
     print()
 
     # grayscale
@@ -259,6 +259,7 @@ def grayscale(characters, yRes):
     while i < yRes:
         for pixel in image[i]:
             output[i] += characters[int(float(pixel / 255) * (len(characters) - 1))]
+        output[i] += "\n"
         i += 1
 
     return output
@@ -267,7 +268,6 @@ def writeDoc(creds, grayscale, docName, content, xRes, yRes, fontSize, lineSpaci
     try:
         service = build("docs", "v1", credentials=creds)
         document = service.documents().create(body={"title":docName}).execute() # create document
-
         _id = document.get("documentId") # get id
     
         # text = "placeholder\n"
@@ -284,7 +284,7 @@ def writeDoc(creds, grayscale, docName, content, xRes, yRes, fontSize, lineSpaci
         requests = []
 
         while(i < yRes):
-            startIndex = xRes * i + 1
+            startIndex = (xRes + 1) * i + 1
             endIndex = startIndex + xRes
 
             requests.append({
@@ -359,7 +359,6 @@ def main():
 
     image = Image.open(pickFile("Which image would you like to use?", "img", [".png", ".jpg", ".jpeg"]))
 
-    print(options)
     xRes = options[2]
     yRes = int(float(xRes / image.width) * image.height)
     image.resize((xRes, yRes)).save("temp.png")
@@ -371,6 +370,7 @@ def main():
             writeDoc(creds, True, docName, grayscale(options[0], yRes), xRes, yRes, options[3], options[4])
         case False:
             writeDoc(creds, False, docName, color(options[0], yRes), xRes, yRes, options[3], options[4])
+
     
     os.remove("temp.png")
 
