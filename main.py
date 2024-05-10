@@ -15,13 +15,13 @@ from alive_progress import alive_bar
 
 # display and validate a multiple choice question
 # returns a string containing a single character
-def multipleChoice(question, options):
+def multipleChoice(question, choices):
     question += "\n"
     valid = ""
     i = 0
 
-    while i < len(options):
-        question += (chr(i + 97) + ") " + options[i] + "\n")
+    while i < len(choices):
+        question += (chr(i + 97) + ") " + choices[i] + "\n")
         valid += chr(i + 97)
 
         i += 1
@@ -30,7 +30,7 @@ def multipleChoice(question, options):
         userInput = input(question)
         if (userInput in valid) and (len(userInput) == 1):
             print()
-            return options[ord(userInput) - 97]
+            return choices[ord(userInput) - 97]
         else:
             print("Invalid input")
             print()
@@ -81,7 +81,31 @@ def pickFile(question, targetFolder, filetypes):
 
     return os.path.join(targetFolder, file)
 
+def charmapLow(characters, values):
+    output = ""
+
+    for val in values:
+        output += characters[int(float(val / 255) * (len(characters) - 1))]
+    
+    return output
+
+def charmapHigh(characters, values):
+    output = ""
+    minVal = min(values)
+    rangeVal = max(values) - minVal
+    rangeChar = len(characters) - 1
+
+    for val in values:
+        # output += characters[int(round(((val - minVal) * rangeChar) / rangeVal))]
+        output += characters[int(((val - minVal) * rangeChar) / rangeVal)]
+    
+    return output
+
 # specific functions/methods ----------------------------------------------
+
+# draw logo
+def logo():
+    print()
 
 # prompt user to give the program access to Drive
 def login():
@@ -117,17 +141,17 @@ def preset():
     options = [None] * 5
 
     for value in preset:
-        if "characters=" in value:
+        if "quality=" in value:
             options[0] = str(re.sub(r'^.*?=', "", value).replace("\n", ""))
-        elif "grayscale=" in value:
-            options[1] = bool(re.sub(r'^.*?=', "", value).replace("\n", ""))
-        elif "width=" in value:
-            options[2] = int(re.sub(r'^.*?=', "", value).replace("\n", ""))
+        elif "characters=" in value:
+            options[1] = str(re.sub(r'^.*?=', "", value).replace("\n", ""))
         elif "fontsize=" in value:
+            options[2] = int(re.sub(r'^.*?=', "", value).replace("\n", ""))
+        elif "width=" in value:
             options[3] = int(re.sub(r'^.*?=', "", value).replace("\n", ""))
         elif "rowspacing=" in value:
             options[4] = int(re.sub(r'^.*?=', "", value).replace("\n", ""))
-
+            
     return options
 
 # saves options to a new text document
@@ -135,7 +159,7 @@ def preset():
 def savePreset(options):
     optionsText = options.copy()
     # reformat the options array
-    order = ["characters", "grayscale", "width", "fontsize", "rowspacing"]
+    order = ["quality", "characters", "fontsize", "width", "rowspacing"]
     i = 0
 
     while i < len(optionsText):
@@ -162,37 +186,33 @@ def savePreset(options):
     with open(path, "w") as file:
         file.writelines(optionsText)
 
-    print("Preset successfully saved in:", path)
+    print("Preset successfully saved in:", path, "\n")
 
 # manual setup
 # returns an array containing the various option values
 def manual():
     options = []
 
+    # quality
+    options.append(multipleChoice("Would you like to use high or low quality mode?\nCheck README.md for more info", ["high", "low"]))
+
     # characters
-    options.append(input("Please enter all of the characters you would like to use\nDefault is (ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#*+-=.,!?%&~/$@)\nThe same character is allowed more than once\nAny spaces will be ignored\n"))
+    options.append(input("Please enter all of the characters you would like to use\nFor low quality mode, use fewer characters\nFor high quality mode, use as many different characters as possible\nThe same character is allowed more than once\nCheck README.md for more info\n"))
     print()
 
-    # grayscale
-    match yesNo("Would you like the image to be grayscale?"):
-        case "y":
-            options.append(True)
-        case "n":
-            options.append(False)
+    # font size
+    options.append(intQuestion("What font size would you like?\nDefault is 3"))
 
     # width
-    options.append(intQuestion("How wide would you like the image to be?\nDefault is §\nHeight is calculated automatically"))
-
-    # font size
-    options.append(intQuestion("What font size would you like?\nDefault is §"))
+    options.append(intQuestion("How wide would you like the image to be?\nThis value should not be greater than the maximum amount of characters that fit on a single row using Courier Prime and your selected font size\nFor the default font size (3), max is 250\nHeight is calculated automatically"))
 
     # row spacing
-    options.append(intQuestion("What row spacing would you like?\nDefault is §\nGoogle Docs will divide this value by 100, so 60 --> 0.6"))
+    options.append(intQuestion("What row spacing would you like?\nUsually, 60 works well\nGoogle Docs will divide this value by 100, so 60 --> 0.6"))
 
     # perform font analysis
     print("A font analysis has to be performed")
     print("Depending on how many characters you have chosen, the time this takes might vary")
-    options[0] = analyze(options[0], 1000)
+    options[1] = analyze(options[1], 1000)
     print()
 
     return(options) 
@@ -251,39 +271,40 @@ def analyze(characters, resolution):
 
 # convert the image to grayscale and translate each pixel to a character
 # returns an array of strings where each character represents a pixel 
-def grayscale(characters, yRes):
+def grayscale(characters, yRes, quality):
     image = cv2.imread('temp.png', cv2.IMREAD_GRAYSCALE)
     output = [""] * yRes
     i = 0
 
-    while i < yRes:
-        for pixel in image[i]:
-            output[i] += characters[int(float(pixel / 255) * (len(characters) - 1))]
-        output[i] += "\n"
-        i += 1
+    if quality == "high":
+        while i < yRes:
+            output[i] = charmapHigh(characters, image[i])
+            output[i] += "\n"
+            i += 1
+    else:
+        while i < yRes:
+            output[i] = charmapLow(characters, image[i])
+            output[i] += "\n"
+            i += 1
 
     return output
 
-def writeDoc(creds, grayscale, docName, content, xRes, yRes, fontSize, lineSpacing):
+# create a google document and write the image
+def writeDoc(creds, docName, content, xRes, yRes, fontSize, lineSpacing):
     try:
         service = build("docs", "v1", credentials=creds)
         document = service.documents().create(body={"title":docName}).execute() # create document
         _id = document.get("documentId") # get id
     
-        # text = "placeholder\n"
-        # xRes = len(text)
-        # yRes = 5
         red = 0.0
         green = 0.0
         blue = 0.0
         fontFamily = "Courier Prime"
-        # fontSize = 5
-        # lineSpacing = 60 # target times 100
         i = 0
 
         requests = []
 
-        while(i < yRes):
+        while(i < len(content)):
             startIndex = (xRes + 1) * i + 1
             endIndex = startIndex + xRes
 
@@ -346,32 +367,30 @@ def writeDoc(creds, grayscale, docName, content, xRes, yRes, fontSize, lineSpaci
 
 # main
 def main():
+    logo()
     creds = login()
 
     options = []
-    match yesNo("Would you like to use a preset?\nTo create a new preset, choose n"):
-        case "y":
+
+    match multipleChoice("Would you like to use a preset or do a manual setup?", ["Preset", "Manual setup"]):
+        case "Preset":
             options = preset()
-        case "n":
+        case "Manual setup":
             options = manual()
             if yesNo("Would you like to save this as a new preset?") == "y":
                 savePreset(options)
 
     image = Image.open(pickFile("Which image would you like to use?", "img", [".png", ".jpg", ".jpeg"]))
+    docName = input("What would you like to name the output document?\n")
+    print("Please wait...")
 
-    xRes = options[2]
+    xRes = options[3]
     yRes = int(float(xRes / image.width) * image.height)
     image.resize((xRes, yRes)).save("temp.png")
 
-    docName = input("What would you like to name the output document?\n")
-
-    match options[1]:
-        case True:
-            writeDoc(creds, True, docName, grayscale(options[0], yRes), xRes, yRes, options[3], options[4])
-        case False:
-            writeDoc(creds, False, docName, color(options[0], yRes), xRes, yRes, options[3], options[4])
-
+    writeDoc(creds, docName, grayscale(options[1], yRes, options[0]), xRes, yRes, options[2], options[4])
     
     os.remove("temp.png")
 
 main()
+# color("abc", 16)

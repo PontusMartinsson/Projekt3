@@ -1,5 +1,5 @@
+quality=high
 characters=MQW@N$gEBHmKqpRX#kdA&b%GSDwhPF8ZOUTxa69se0yVYnf4z2CL5u3JojcvItrli17/?*=+!~,-. 
-grayscale=False
-width=150
-fontsize=5
+fontsize=3
+width=250
 rowspacing=60
