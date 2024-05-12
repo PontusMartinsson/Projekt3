@@ -296,9 +296,6 @@ def writeDoc(creds, docName, content, xRes, yRes, fontSize, lineSpacing):
         document = service.documents().create(body={"title":docName}).execute() # create document
         _id = document.get("documentId") # get id
     
-        red = 0.0
-        green = 0.0
-        blue = 0.0
         fontFamily = "Courier Prime"
         i = 0
 
@@ -343,15 +340,6 @@ def writeDoc(creds, docName, content, xRes, yRes, fontSize, lineSpacing):
                         "fontSize": {
                             "magnitude": fontSize,
                             "unit": "PT"
-                        },
-                        "foregroundColor": {
-                            "color": {
-                                "rgbColor": {
-                                    "red": red,
-                                    "green": green,
-                                    "blue": blue
-                                }
-                            }
                         }
                     },
                     "fields": "weightedFontFamily, fontSize, foregroundColor"
