@@ -99,7 +99,10 @@ def charmapHigh(characters, values):
     minVal = min(values)
     rangeVal = max(values) - minVal
     rangeChar = len(characters) - 1
-
+    
+    if rangeVal == 0:
+        return characters[len(characters) - 1] * len(values)
+    
     for val in values:
         output += characters[int(round(((val - minVal) * rangeChar) / rangeVal))]
     
@@ -219,7 +222,7 @@ def manual():
     options.append(multipleChoice("Would you like to use high or low quality mode?\nCheck README.md for more info", ["high", "low"]))
 
     # characters
-    options.append(input("Please enter all of the characters you would like to use\nFor low quality mode, use fewer characters\nFor high quality mode, use as many different characters as possible\nThe same character is allowed more than once\nCheck README.md for more info\n"))
+    options.append(input("Please enter all of the characters you would like to use\nFor low quality mode, use fewer characters\nFor high quality mode, use as many different characters as possible\nSpace is allowed, and the same character is allowed more than once\nCheck README.md for more info\n"))
     print()
 
     # font size
@@ -245,7 +248,6 @@ def analyze(characters, resolution):
     pixels = []
     font = ImageFont.truetype("font.ttf", resolution)
 
-    # characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#*+-=.,!?%&~/$@ " #default characters
     char_list = list(characters)
 
     # create a blank canvas to render the symbols
@@ -327,6 +329,7 @@ def writeDoc(creds, docName, content, xRes, yRes, fontSize, lineSpacing):
             startIndex = (xRes + 1) * i + 1
             endIndex = startIndex + xRes
 
+            # write text
             requests.append({
                 "insertText": {
                     "text": content[i],
@@ -336,6 +339,7 @@ def writeDoc(creds, docName, content, xRes, yRes, fontSize, lineSpacing):
                 }
             })
 
+            # change line spacing
             requests.append({
                 "updateParagraphStyle": {
                     "range": {
@@ -349,6 +353,7 @@ def writeDoc(creds, docName, content, xRes, yRes, fontSize, lineSpacing):
                 }
             })
 
+            # change font and text size
             requests.append({
                 "updateTextStyle": {
                     "range": {
@@ -402,5 +407,10 @@ def main():
     writeDoc(creds, docName, grayscale(options[1], yRes, options[0]), xRes, yRes, options[2], options[4])
     
     os.remove("temp.png")
+
+    print()
+    print("Done!")
+    print("The finished document should have appeared on your Google Drive by now")
+    print()
 
 main()
