@@ -106,6 +106,24 @@ def charmapHigh(characters, values):
 # draw logo
 def logo():
     print()
+    print(r"      ____ ____   ___   ____                                ")
+    print(r"     / ___|  _ \ / _ \ / ___|                               ")
+    print(r"    | |  _| | | | | | | |                                   ")
+    print(r"    | |_| | |_| | |_| | |___                                ")
+    print(r"     \____|____/_\___/_\____|___                            ")
+    print(r"       / \  / ___| / ___|_ _|_ _|                           ")
+    print(r"      / _ \ \___ \| |    | | | |                            ")
+    print(r"     / ___ \ ___) | |___ | | | |                            ")
+    print(r"    /_/___\_\____/ \____|___|___|__ ____ _____ _____ ____   ")
+    print(r"     / ___/ _ \| \ | \ \   / / ____|  _ \_   _| ____|  _ \  ")
+    print(r"    | |  | | | |  \| |\ \ / /|  _| | |_) || | |  _| | |_) | ")
+    print(r"    | |__| |_| | |\  | \ V / | |___|  _ < | | | |___|  _ <  ")
+    print(r"     \____\___/|_| \_|  \_/  |_____|_| \_\|_| |_____|_| \_\ ")
+    print()
+    print()
+    print("-A tool that turns any image into a Google document")
+    print()
+    print()
 
 # prompt user to give the program access to Drive
 def login():
@@ -132,7 +150,7 @@ def login():
 # select a custom preset
 # returns an array containing the various option values
 def preset():
-    path = pickFile("Which preset would you like to use?", "presets", [".txt"])
+    path = pickFile("Which preset would you like to use?", "../presets", [".txt"])
     preset = []
 
     with open(path, "r") as file:
@@ -356,6 +374,7 @@ def writeDoc(creds, docName, content, xRes, yRes, fontSize, lineSpacing):
 # main
 def main():
     logo()
+
     creds = login()
 
     options = []
@@ -368,7 +387,7 @@ def main():
             if yesNo("Would you like to save this as a new preset?") == "y":
                 savePreset(options)
 
-    image = Image.open(pickFile("Which image would you like to use?", "img", [".png", ".jpg", ".jpeg"]))
+    image = Image.open(pickFile("Which image would you like to use?", "../img", [".png", ".jpg", ".jpeg"]))
     docName = input("What would you like to name the output document?\n")
     print("Please wait...")
 
