@@ -90,7 +90,7 @@ def charmapLow(characters, values):
     output = ""
 
     for val in values:
-        output += characters[int(float(val / 255) * (len(characters) - 1))]
+        output += characters[int(round(float(val / 255) * (len(characters) - 1)))]
     
     return output
 
@@ -101,8 +101,7 @@ def charmapHigh(characters, values):
     rangeChar = len(characters) - 1
 
     for val in values:
-        # output += characters[int(round(((val - minVal) * rangeChar) / rangeVal))]
-        output += characters[int(((val - minVal) * rangeChar) / rangeVal)]
+        output += characters[int(round(((val - minVal) * rangeChar) / rangeVal))]
     
     return output
 
@@ -405,4 +404,3 @@ def main():
     os.remove("temp.png")
 
 main()
-# color("abc", 16)
