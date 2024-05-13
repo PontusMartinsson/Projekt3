@@ -77,6 +77,11 @@ def pickFile(question, targetFolder, filetypes):
             if filename.endswith(fileExtension):
                 files.append(filename)
 
+    if len(files) == 0:
+        print("There are no available files")
+        print("Terminating...")
+        quit()
+
     file = multipleChoice(question, files)
 
     return os.path.join(targetFolder, file)
