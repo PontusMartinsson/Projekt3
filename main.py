@@ -150,7 +150,7 @@ def login():
 # select a custom preset
 # returns an array containing the various option values
 def preset():
-    path = pickFile("Which preset would you like to use?", "../presets", [".txt"])
+    path = pickFile("Which preset would you like to use?", "presets", [".txt"])
     preset = []
 
     with open(path, "r") as file:
@@ -387,7 +387,7 @@ def main():
             if yesNo("Would you like to save this as a new preset?") == "y":
                 savePreset(options)
 
-    image = Image.open(pickFile("Which image would you like to use?", "../img", [".png", ".jpg", ".jpeg"]))
+    image = Image.open(pickFile("Which image would you like to use?", "img", [".png", ".jpg", ".jpeg"]))
     docName = input("What would you like to name the output document?\n")
     print("Please wait...")
 

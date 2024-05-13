@@ -1,0 +1,5 @@
+os-sys
+regex
+opencv-python
+numpy
+pillow
